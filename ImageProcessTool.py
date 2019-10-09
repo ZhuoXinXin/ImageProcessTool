@@ -1,8 +1,6 @@
 # -*- coding:utf-8 -*-
-import time
 import wx
-import os
-
+from PIL import Image
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, id):
@@ -15,7 +13,8 @@ class MyFrame(wx.Frame):
         # 创建按钮
         self.bt_FlipHoriz = wx.Button(panel, label='水平翻转')
         self.bt_FlipVert = wx.Button(panel, label='垂直翻转')
-        self.bt_MidBase = wx.Button(panel, label='居中白底')
+        self.bt_MidBase = wx.Button(panel, label='居中白底')  # 确定白底像素
+        self.bt_AddWrite = wx.Button(panel, label='添加白底')
 
         # 创建文本
 
@@ -31,7 +30,8 @@ class MyFrame(wx.Frame):
 
         bsizer_center = wx.BoxSizer(wx.HORIZONTAL)
 
-        bsizer_botton = wx.BoxSizer(wx.VERTICAL)
+        bsizer_botton1 = wx.BoxSizer(wx.VERTICAL)
+        bsizer_botton2 = wx.BoxSizer(wx.VERTICAL)
         bsizer_content = wx.BoxSizer(wx.HORIZONTAL)
 
         # 容器中添加控件
@@ -42,9 +42,10 @@ class MyFrame(wx.Frame):
                           border=5)
         bsizer_center.Add(self.txt_Pixel, proportion=2, flag=wx.EXPAND | wx.ALL, border=5)
 
-        bsizer_botton.Add(self.bt_FlipHoriz, proportion=1, flag=wx.ALL, border=5)
-        bsizer_botton.Add(self.bt_FlipVert, proportion=1, flag=wx.ALL, border=5)
-        bsizer_botton.Add(self.bt_MidBase, proportion=1, flag=wx.ALL, border=5)
+        bsizer_botton1.Add(self.bt_FlipHoriz, proportion=1, flag=wx.ALL, border=5)
+        bsizer_botton1.Add(self.bt_FlipVert, proportion=1, flag=wx.ALL, border=5)
+        bsizer_botton1.Add(self.bt_MidBase, proportion=1, flag=wx.ALL, border=5)
+        bsizer_botton2.Add(self.bt_AddWrite, proportion=1, flag=wx.ALL, border=5)
         bsizer_content.Add(self.text_contents, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
 
         # wx.VERTICAL 横向分割
@@ -54,11 +55,13 @@ class MyFrame(wx.Frame):
         bsizer_all.Add(bsizer_center, proportion=0, flag=wx.EXPAND | wx.ALL, border=5)
         # 添加底部sizer，proportion=1 代表bsizer_bottom大小变化
         bsizer_botoom = wx.BoxSizer(wx.HORIZONTAL)
-        bsizer_all.Add(bsizer_botoom, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
-        bsizer_botoom.Add(bsizer_botton, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
+        bsizer_all.Add(bsizer_botoom, proportion=0, flag=wx.EXPAND | wx.ALL, border=5)
+        bsizer_botoom.Add(bsizer_botton1, proportion=0, flag=wx.EXPAND | wx.ALL, border=5)
+        bsizer_botoom.Add(bsizer_botton2, proportion=0, flag=wx.EXPAND | wx.ALL, border=5)
         bsizer_botoom.Add(bsizer_content, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
         self.Bind(wx.EVT_BUTTON, self.update, self.bt_FlipHoriz)
         self.Bind(wx.EVT_BUTTON, self.zipweb, self.bt_FlipVert)
+        self.Bind(wx.EVT_BUTTON, self.addwrite, self.bt_AddWrite)
         panel.SetSizer(bsizer_all)
 
     def copyFiles(self, sourceDir, targetDir):
@@ -73,6 +76,25 @@ class MyFrame(wx.Frame):
     def zipweb(self, event):
         pass
 
+    def addwrite(self, event):
+        try:
+            sourceFile = self.txt_FilePath.GetValue()
+            image = Image.open(sourceFile)
+            image = image.convert('RGBA')
+
+            imagewidth = image.size[0]  # 图片宽度
+            imageheight = image.size[1]  # 图片高度
+
+            whiteimage = Image.open('白底.jpg')
+            whiteimage = whiteimage.convert('RGB')
+
+            whiteimage = whiteimage.resize((imagewidth, imageheight))
+
+            whiteimage.paste(image, (0, 0), mask=image)
+            whiteimage.save(sourceFile)
+            self.text_contents.AppendText('白底转换成功\n')
+        except Exception as e:
+            self.text_contents.AppendText('报错：{0}\n'.format(e))
 if __name__ == '__main__':
     app = wx.App()
     frame = MyFrame(parent=None, id=-1)

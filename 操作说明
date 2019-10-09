@@ -1,0 +1,1 @@
+pyinstaller -F CMUpdateTool.py -i ico.ico
